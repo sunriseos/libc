@@ -7,7 +7,8 @@ macro_rules! expand_align {
                            target_arch = "mips64",
                            target_arch = "s390x",
                            target_arch = "sparc64",
-                           target_arch = "aarch64"),
+                           target_arch = "aarch64",
+                           target_arch = "riscv64"),
                        repr(align(4)))]
             #[cfg_attr(not(any(target_pointer_width = "32",
                                target_arch = "x86_64",
@@ -15,7 +16,8 @@ macro_rules! expand_align {
                                target_arch = "mips64",
                                target_arch = "s390x",
                                target_arch = "sparc64",
-                               target_arch = "aarch64")),
+                               target_arch = "aarch64",
+                               target_arch = "riscv64")),
                        repr(align(8)))]
             pub struct pthread_mutexattr_t {
                 #[doc(hidden)]
@@ -62,6 +64,7 @@ macro_rules! expand_align {
                                target_arch = "arm",
                                target_arch = "hexagon",
                                target_arch = "powerpc",
+                               target_arch = "sparc",
                                target_arch = "x86_64",
                                target_arch = "x86")),
                        repr(align(4)))]
@@ -70,6 +73,7 @@ macro_rules! expand_align {
                                    target_arch = "arm",
                                    target_arch = "hexagon",
                                    target_arch = "powerpc",
+                                   target_arch = "sparc",
                                    target_arch = "x86_64",
                                    target_arch = "x86"))),
                        repr(align(8)))]
@@ -83,6 +87,7 @@ macro_rules! expand_align {
                                target_arch = "arm",
                                target_arch = "hexagon",
                                target_arch = "powerpc",
+                               target_arch = "sparc",
                                target_arch = "x86_64",
                                target_arch = "x86")),
                        repr(align(4)))]
@@ -91,6 +96,7 @@ macro_rules! expand_align {
                                    target_arch = "arm",
                                    target_arch = "hexagon",
                                    target_arch = "powerpc",
+                                   target_arch = "sparc",
                                    target_arch = "x86_64",
                                    target_arch = "x86"))),
                        repr(align(8)))]
@@ -98,5 +104,5 @@ macro_rules! expand_align {
                 size: [u8; ::__SIZEOF_PTHREAD_RWLOCK_T],
             }
         }
-    }
+    };
 }
