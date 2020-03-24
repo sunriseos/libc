@@ -13,7 +13,10 @@ if ! rustc --version | grep -E "nightly" ; then
     exit 1
 fi
 
-cargo +nightly install semverver -Z install-upgrade
+rustup component add rustc-dev
+
+# FIXME: Use upstream once it gets rustup.
+cargo +nightly install semververfork
 
 TARGETS=
 case "${OS}" in
@@ -49,10 +52,6 @@ wasm32-unknown-unknown \
     *osx*)
         TARGETS="\
 aarch64-apple-ios \
-armv7-apple-ios \
-armv7s-apple-ios \
-i386-apple-ios \
-i686-apple-darwin \
 x86_64-apple-darwin \
 x86_64-apple-ios \
 "
@@ -73,5 +72,6 @@ for TARGET in $TARGETS; do
         sleep 1
     done
 
-    cargo +nightly semver --api-guidelines --target="${TARGET}"
+    # FIXME: Use upstream once it gets rustup.
+    cargo +nightly semverfork --api-guidelines --target="${TARGET}"
 done

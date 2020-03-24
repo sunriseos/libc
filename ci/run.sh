@@ -5,7 +5,7 @@
 
 set -ex
 
-MIRRORS_URL="https://rust-lang-ci-mirrors.s3-us-west-1.amazonaws.com/libc"
+MIRRORS_URL="https://ci-mirrors.rust-lang.org/libc"
 
 TARGET="${1}"
 
@@ -37,7 +37,7 @@ if [ "$QEMU" != "" ]; then
     # plain qcow2 image: just download it
     qemufile="$(echo "${QEMU}" | sed 's/\//__/g')"
     if [ ! -f "${tmpdir}/${qemufile}" ]; then
-      curl --retry 5 "${MIRRORS_URL}/${QEMU}" | \
+      curl --retry 5 "${MIRRORS_URL}/${QEMU}" \
         > "${tmpdir}/${qemufile}"
     fi
   fi
@@ -83,16 +83,16 @@ if [ "$QEMU" != "" ]; then
 fi
 
 # FIXME: x86_64-unknown-linux-gnux32 fail to compile without --release
-# See https://github.com/rust-lang/rust/issues/45417
+# See https://github.com/rust-lang/rust/issues/59220
 opt=
 if [ "$TARGET" = "x86_64-unknown-linux-gnux32" ]; then
   opt="--release"
 fi
 
-cargo test -vv $opt --no-default-features --manifest-path libc-test/Cargo.toml \
+cargo test $opt --no-default-features --manifest-path libc-test/Cargo.toml \
       --target "${TARGET}"
 
-cargo test -vv $opt --manifest-path libc-test/Cargo.toml --target "${TARGET}"
+cargo test $opt --manifest-path libc-test/Cargo.toml --target "${TARGET}"
 
-cargo test -vv $opt --features extra_traits --manifest-path libc-test/Cargo.toml \
+cargo test $opt --features extra_traits --manifest-path libc-test/Cargo.toml \
       --target "${TARGET}"

@@ -12,7 +12,7 @@ pr: ["master"]
 jobs:
   - job: DockerLinuxTier1
     pool:
-      vmImage: ubuntu-16.04
+      vmImage: ubuntu-18.04
     steps:
       - template: azure-install-rust.yml
       - bash: LIBC_CI=1 sh ./ci/run-docker.sh $TARGET
@@ -25,9 +25,9 @@ jobs:
           TARGET: x86_64-unknown-linux-gnu
 
   - job: DockerLinuxTier2
-    dependsOn: DockerLinuxTier1
+    #dependsOn: DockerLinuxTier1
     pool:
-      vmImage: ubuntu-16.04
+      vmImage: ubuntu-18.04
     steps:
       - template: azure-install-rust.yml
       - bash: LIBC_CI=1 sh ./ci/run-docker.sh $TARGET
@@ -46,8 +46,10 @@ jobs:
           TARGET: arm-unknown-linux-gnueabihf
         arm-unknown-linux-musleabihf:
           TARGET: arm-unknown-linux-musleabihf
-        asmjs-unknown-emscripten:
-          TARGET: asmjs-unknown-emscripten
+        # Disabled because currently broken, see:
+        # https://github.com/rust-lang/libc/issues/1591
+        # asmjs-unknown-emscripten:
+        #  TARGET: asmjs-unknown-emscripten
         i686-linux-android:
           TARGET: i686-linux-android
         i686-unknown-linux-musl:
@@ -68,14 +70,16 @@ jobs:
           TARGET: powerpc64-unknown-linux-gnu
         powerpc64le-unknown-linux-gnu:
           TARGET: powerpc64le-unknown-linux-gnu
-        #s390x-unknown-linux-gnu:
-        #  TARGET: s390x-unknown-linux-gnu
+        s390x-unknown-linux-gnu:
+          TARGET: s390x-unknown-linux-gnu
         #wasm32-wasi
         #  TARGET: wasm32-wasi
         sparc64-unknown-linux-gnu:
           TARGET: sparc64-unknown-linux-gnu
-        wasm32-unknown-emscripten:
-          TARGET: wasm32-unknown-emscripten
+        # Disabled because currently broken, see:
+        # https://github.com/rust-lang/libc/issues/1591
+        # wasm32-unknown-emscripten:
+        #  TARGET: wasm32-unknown-emscripten
         x86_64-linux-android:
           TARGET: x86_64-linux-android
         x86_64-unknown-linux-gnux32:
@@ -85,7 +89,7 @@ jobs:
 
   - job: DockerOSX64
     pool:
-      vmImage: macos-10.14
+      vmImage: macos-10.15
     steps:
       - template: azure-install-rust.yml
       - bash: LIBC_CI=1 sh ./ci/run.sh $TARGET
@@ -94,18 +98,6 @@ jobs:
       matrix:
         x86_64-apple-darwin:
           TARGET: x86_64-apple-darwin
-
-  - job: DockerOSX32
-    pool:
-      vmImage: macos-10.13
-    steps:
-      - template: azure-install-rust.yml
-      - bash: LIBC_CI=1 sh ./ci/run.sh $TARGET
-        displayName: Execute run.sh
-    strategy:
-      matrix:
-        i686-apple-darwin:
-          TARGET: i686-apple-darwin
 
   - job: Windows
     pool:
@@ -122,16 +114,18 @@ jobs:
           ARCH: x86_64
         x86_64-pc-windows-msvc:
           TARGET: x86_64-pc-windows-msvc
-        i686-pc-windows-gnu:
-          TARGET: i686-pc-windows-gnu
-          ARCH_BITS: 32
-          ARCH: i686
+        # Disabled because broken:
+        #  https://github.com/rust-lang/libc/issues/1592
+        #i686-pc-windows-gnu:
+        #  TARGET: i686-pc-windows-gnu
+        #  ARCH_BITS: 32
+        #  ARCH: i686
         i686-pc-windows-msvc:
           TARGET: i686-pc-windows-msvc
 
   - job: StyleAndDocs
     pool:
-      vmImage: ubuntu-16.04
+      vmImage: ubuntu-18.04
     steps:
       - template: azure-install-rust.yml
       - script: sh ci/style.sh
@@ -142,31 +136,30 @@ jobs:
         parameters:
           deploy_dir: target/doc
 
-  # FIXME: re-enable these after the next release
-  #- job: SemverLinux
-  #  dependsOn: BuildChannelsLinux
-  #  continueOnError: true
-  #  pool:
-  #    vmImage: ubuntu-16.04
-  #  steps:
-  #    - template: azure-install-rust.yml
-  #    - script: sh ci/semver.sh linux
-  #      displayName: Check breaking changes
+  - job: SemverLinux
+    dependsOn: BuildChannelsLinux
+    continueOnError: true
+    pool:
+      vmImage: ubuntu-18.04
+    steps:
+      - template: azure-install-rust.yml
+      - script: sh ci/semver.sh linux
+        displayName: Check breaking changes
 
-  #- job: SemverOSX
-  #  dependsOn: BuildChannelsOSX
-  #  continueOnError: true
-  #  pool:
-  #    vmImage: macos-10.14
-  #  steps:
-  #    - template: azure-install-rust.yml
-  #    - script: sh ci/semver.sh osx
-  #      displayName: Check breaking changes
+  - job: SemverOSX
+    dependsOn: BuildChannelsOSX
+    continueOnError: true
+    pool:
+      vmImage: macos-10.15
+    steps:
+      - template: azure-install-rust.yml
+      - script: sh ci/semver.sh osx
+        displayName: Check breaking changes
 
   - job: BuildChannelsLinux
     dependsOn: StyleAndDocs
     pool:
-      vmImage: ubuntu-16.04
+      vmImage: ubuntu-18.04
     steps:
       - template: azure-install-rust.yml
       - script: LIBC_CI=1 sh ./ci/build.sh
@@ -195,7 +188,7 @@ jobs:
   - job: BuildChannelsOSX
     dependsOn: StyleAndDocs
     pool:
-      vmImage: macos-10.13
+      vmImage: macos-10.15
     steps:
       - template: azure-install-rust.yml
       - script: LIBC_CI=1 sh ./ci/build.sh

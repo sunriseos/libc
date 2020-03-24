@@ -170,6 +170,7 @@ pub const MAP_POPULATE: ::c_int = 0x08000;
 pub const MAP_NONBLOCK: ::c_int = 0x010000;
 pub const MAP_STACK: ::c_int = 0x020000;
 pub const MAP_HUGETLB: ::c_int = 0x040000;
+pub const MAP_SYNC : ::c_int = 0x080000;
 
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;
@@ -227,6 +228,9 @@ pub const F_GETOWN: ::c_int = 9;
 pub const F_SETLK: ::c_int = 6;
 pub const F_SETLKW: ::c_int = 7;
 pub const F_SETOWN: ::c_int = 8;
+pub const F_OFD_GETLK: ::c_int = 36;
+pub const F_OFD_SETLK: ::c_int = 37;
+pub const F_OFD_SETLKW: ::c_int = 38;
 
 pub const VEOF: usize = 4;
 
@@ -596,6 +600,7 @@ pub const SYS_copy_file_range: ::c_long = 379;
 pub const SYS_preadv2: ::c_long = 380;
 pub const SYS_pwritev2: ::c_long = 381;
 pub const SYS_kexec_file_load: ::c_long = 382;
+pub const SYS_statx: ::c_long = 383;
 
 pub const FIOCLEX: ::c_int = 0x20006601;
 pub const FIONCLEX: ::c_int = 0x20006602;
@@ -667,12 +672,12 @@ pub const CBAUD: ::tcflag_t = 0xff;
 pub const TAB1: ::c_int = 0x400;
 pub const TAB2: ::c_int = 0x800;
 pub const TAB3: ::c_int = 0xc00;
-pub const CR1: ::c_int  = 0x1000;
-pub const CR2: ::c_int  = 0x2000;
-pub const CR3: ::c_int  = 0x3000;
-pub const FF1: ::c_int  = 0x4000;
-pub const BS1: ::c_int  = 0x8000;
-pub const VT1: ::c_int  = 0x10000;
+pub const CR1: ::c_int = 0x1000;
+pub const CR2: ::c_int = 0x2000;
+pub const CR3: ::c_int = 0x3000;
+pub const FF1: ::c_int = 0x4000;
+pub const BS1: ::c_int = 0x8000;
+pub const VT1: ::c_int = 0x10000;
 pub const VWERASE: usize = 10;
 pub const VREPRINT: usize = 11;
 pub const VSUSP: usize = 12;
@@ -708,14 +713,14 @@ pub const NOFLSH: ::tcflag_t = 0x80000000;
 pub const CIBAUD: ::tcflag_t = 0o77600000;
 pub const CBAUDEX: ::tcflag_t = 0o0000020;
 pub const VSWTC: usize = 9;
-pub const OLCUC:  ::tcflag_t = 0o000004;
-pub const NLDLY:  ::tcflag_t = 0o0001400;
-pub const CRDLY:  ::tcflag_t = 0o0030000;
+pub const OLCUC: ::tcflag_t = 0o000004;
+pub const NLDLY: ::tcflag_t = 0o0001400;
+pub const CRDLY: ::tcflag_t = 0o0030000;
 pub const TABDLY: ::tcflag_t = 0o0006000;
-pub const BSDLY:  ::tcflag_t = 0o0100000;
-pub const FFDLY:  ::tcflag_t = 0o0040000;
-pub const VTDLY:  ::tcflag_t = 0o0200000;
-pub const XTABS:  ::tcflag_t = 0o00006000;
+pub const BSDLY: ::tcflag_t = 0o0100000;
+pub const FFDLY: ::tcflag_t = 0o0040000;
+pub const VTDLY: ::tcflag_t = 0o0200000;
+pub const XTABS: ::tcflag_t = 0o00006000;
 
 pub const B57600: ::speed_t = 0o00020;
 pub const B115200: ::speed_t = 0o00021;
@@ -733,6 +738,6 @@ pub const B3000000: ::speed_t = 0o00034;
 pub const B3500000: ::speed_t = 0o00035;
 pub const B4000000: ::speed_t = 0o00036;
 
-extern {
+extern "C" {
     pub fn ioctl(fd: ::c_int, request: ::c_int, ...) -> ::c_int;
 }

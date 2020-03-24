@@ -2,6 +2,8 @@
 
 # Checks that libc builds properly for all supported targets on a particular
 # Rust version:
+# The FILTER environment variable can be used to select which target(s) to build.
+# For example: set FILTER to vxworks to select the targets that has vxworks in name
 
 set -ex
 
@@ -13,7 +15,7 @@ RUST=${TOOLCHAIN}
 echo "Testing Rust ${RUST} on ${OS}"
 
 if [ "${TOOLCHAIN}" = "nightly" ] ; then
-    cargo +nightly install cargo-xbuild -Z install-upgrade
+    cargo +nightly install cargo-xbuild
     rustup component add rust-src
 fi
 
@@ -21,20 +23,6 @@ test_target() {
     BUILD_CMD="${1}"
     TARGET="${2}"
     NO_STD="${3}"
-
-    opt=
-    if [ "${TARGET}" = "x86_64-unknown-linux-gnux32" ]; then
-        # FIXME: x86_64-unknown-linux-gnux32 fail to compile without
-        # --release
-        #
-        # See https://github.com/rust-lang/rust/issues/45417
-        opt="--release"
-    fi
-    # FIXME: https://github.com/rust-lang/rust/issues/61174
-    if [ "${TARGET}" = "sparcv9-sun-solaris" ] ||
-       [ "${TARGET}" = "x86_64-sun-solaris" ]; then
-        return 0
-    fi
 
     # If there is a std component, fetch it:
     if [ "${NO_STD}" != "1" ]; then
@@ -53,21 +41,28 @@ test_target() {
     fi
 
     # Test that libc builds without any default features (no libstd)
-    cargo "+${RUST}" "${BUILD_CMD}" -vv $opt --no-default-features --target "${TARGET}"
+    cargo "+${RUST}" "${BUILD_CMD}" -vv --no-default-features --target "${TARGET}"
 
     # Test that libc builds with default features (e.g. libstd)
     # if the target supports libstd
     if [ "$NO_STD" != "1" ]; then
-        cargo "+${RUST}" "${BUILD_CMD}" -vv $opt --target "${TARGET}"
+        cargo "+${RUST}" "${BUILD_CMD}" -vv --target "${TARGET}"
     fi
 
     # Test that libc builds with the `extra_traits` feature
-    cargo "+${RUST}" "${BUILD_CMD}" -vv $opt --no-default-features --target "${TARGET}" \
+    cargo "+${RUST}" "${BUILD_CMD}" -vv --no-default-features --target "${TARGET}" \
           --features extra_traits
+
+    # Test the 'const-extern-fn' feature on nightly
+    if [ "${RUST}" = "nightly" ]; then
+        cargo "+${RUST}" "${BUILD_CMD}" -vv --no-default-features --target "${TARGET}" \
+          --features const-extern-fn
+    fi
+
 
     # Also test that it builds with `extra_traits` and default features:
     if [ "$NO_STD" != "1" ]; then
-        cargo "+${RUST}" "${BUILD_CMD}" -vv $opt --target "${TARGET}" \
+        cargo "+${RUST}" "${BUILD_CMD}" -vv --target "${TARGET}" \
               --features extra_traits
     fi
 }
@@ -89,7 +84,6 @@ mips-unknown-linux-gnu \
 mips-unknown-linux-musl \
 mips64-unknown-linux-gnuabi64 \
 mips64el-unknown-linux-gnuabi64 \
-mipsel-unknown-linux-gnu \
 mipsel-unknown-linux-gnu \
 mipsel-unknown-linux-musl \
 powerpc-unknown-linux-gnu \
@@ -139,10 +133,6 @@ x86_64-unknown-linux-gnux32 \
 
 RUST_OSX_TARGETS="\
 aarch64-apple-ios \
-armv7-apple-ios \
-armv7s-apple-ios \
-i386-apple-ios \
-i686-apple-darwin \
 x86_64-apple-darwin \
 x86_64-apple-ios \
 "
@@ -176,13 +166,13 @@ case "${OS}" in
 esac
 
 for TARGET in $TARGETS; do
-    test_target build "$TARGET"
+    if echo "$TARGET"|grep -q "$FILTER";then
+        test_target build "$TARGET"
+    fi
 done
 
 # FIXME: https://github.com/rust-lang/rust/issues/58564
 # sparc-unknown-linux-gnu
-# FIXME: https://github.com/rust-lang/rust/issues/62932
-# thumbv6m-none-eabi
 RUST_LINUX_NO_CORE_TARGETS="\
 aarch64-pc-windows-msvc \
 aarch64-unknown-cloudabi \
@@ -210,10 +200,12 @@ nvptx64-nvidia-cuda \
 powerpc-unknown-linux-gnuspe \
 powerpc-unknown-netbsd \
 powerpc64-unknown-freebsd \
+riscv64gc-unknown-linux-gnu \
 riscv32imac-unknown-none-elf \
 riscv32imc-unknown-none-elf \
 sparc64-unknown-netbsd \
 
+thumbv6m-none-eabi \
 thumbv7em-none-eabi \
 thumbv7em-none-eabihf \
 thumbv7m-none-eabi \
@@ -237,7 +229,9 @@ powerpc64-wrs-vxworks \
 
 if [ "${RUST}" = "nightly" ] && [ "${OS}" = "linux" ]; then
     for TARGET in $RUST_LINUX_NO_CORE_TARGETS; do
-        test_target xbuild "$TARGET" 1
+        if echo "$TARGET"|grep -q "$FILTER";then
+            test_target xbuild "$TARGET" 1
+        fi
     done
 
     # Nintendo switch
@@ -257,3 +251,17 @@ if [ "${RUST}" = "nightly" ] && [ "${OS}" = "linux" ]; then
     cargo xbuild --target switch.json
 fi
 
+RUST_OSX_NO_CORE_TARGETS="\
+armv7-apple-ios \
+armv7s-apple-ios \
+i386-apple-ios \
+i686-apple-darwin \
+"
+
+if [ "${RUST}" = "nightly" ] && [ "${OS}" = "osx" ]; then
+    for TARGET in $RUST_OSX_NO_CORE_TARGETS; do
+        if echo "$TARGET" | grep -q "$FILTER"; then
+            test_target xbuild "$TARGET" 1
+        fi
+    done
+fi

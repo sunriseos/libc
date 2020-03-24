@@ -14,14 +14,17 @@
 //! [pd]: https://rust-lang.github.io/libc/#platform-specific-documentation
 #![crate_name = "libc"]
 #![crate_type = "rlib"]
-#![cfg_attr(libc_deny_warnings, deny(warnings))]
+// FIXME: Remove this and redundant_semicolon once renamed lint reaches stable.
+#![allow(renamed_and_removed_lints)]
 #![allow(
     bad_style,
     overflowing_literals,
     improper_ctypes,
     unknown_lints,
-    redundant_semicolon
+    redundant_semicolon,
+    redundant_semicolons
 )]
+#![cfg_attr(libc_deny_warnings, deny(warnings))]
 // Attributes needed when building as part of the standard library
 #![cfg_attr(
     feature = "rustc-dep-of-std",
@@ -34,6 +37,7 @@
 #![no_std]
 #![cfg_attr(feature = "rustc-dep-of-std", no_core)]
 #![cfg_attr(target_os = "redox", feature(static_nobundle))]
+#![cfg_attr(libc_const_extern_fn, feature(const_extern_fn))]
 
 #[macro_use]
 mod macros;

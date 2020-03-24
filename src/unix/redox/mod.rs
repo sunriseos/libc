@@ -40,7 +40,9 @@ pub type time_t = ::c_long;
 pub enum timezone {}
 impl ::Copy for timezone {}
 impl ::Clone for timezone {
-    fn clone(&self) -> timezone { *self }
+    fn clone(&self) -> timezone {
+        *self
+    }
 }
 
 s_no_extra_traits! {
@@ -256,7 +258,7 @@ pub const F_GETLK: ::c_int = 5;
 pub const F_SETLK: ::c_int = 6;
 pub const F_SETLKW: ::c_int = 7;
 
-// TODO: relibc {
+// FIXME: relibc {
 pub const RTLD_DEFAULT: *mut ::c_void = 0i64 as *mut ::c_void;
 // }
 
@@ -411,7 +413,7 @@ pub const F_GETFD: ::c_int = 1;
 pub const F_SETFD: ::c_int = 2;
 pub const F_GETFL: ::c_int = 3;
 pub const F_SETFL: ::c_int = 4;
-// TODO: relibc {
+// FIXME: relibc {
 pub const F_DUPFD_CLOEXEC: ::c_int = ::F_DUPFD;
 // }
 pub const FD_CLOEXEC: ::c_int = 0x0100_0000;
@@ -433,14 +435,14 @@ pub const O_DIRECTORY: ::c_int = 0x1000_0000;
 pub const O_PATH: ::c_int = 0x2000_0000;
 pub const O_SYMLINK: ::c_int = 0x4000_0000;
 // Negative to allow it to be used as int
-// TODO: Fix negative values missing from includes
+// FIXME: Fix negative values missing from includes
 pub const O_NOFOLLOW: ::c_int = -0x8000_0000;
 
 // netdb.h
 pub const EAI_SYSTEM: ::c_int = -11;
 
 // netinet/in.h
-// TODO: relibc {
+// FIXME: relibc {
 pub const IP_TTL: ::c_int = 2;
 pub const IPV6_UNICAST_HOPS: ::c_int = 16;
 pub const IPV6_MULTICAST_IF: ::c_int = 17;
@@ -458,7 +460,7 @@ pub const IP_DROP_MEMBERSHIP: ::c_int = 36;
 
 // netinet/tcp.h
 pub const TCP_NODELAY: ::c_int = 1;
-// TODO: relibc {
+// FIXME: relibc {
 pub const TCP_KEEPIDLE: ::c_int = 1;
 // }
 
@@ -573,7 +575,7 @@ pub const EXIT_SUCCESS: ::c_int = 0;
 pub const EXIT_FAILURE: ::c_int = 1;
 
 // sys/ioctl.h
-// TODO: relibc {
+// FIXME: relibc {
 pub const FIONBIO: ::c_ulong = 0x5421;
 pub const FIOCLEX: ::c_ulong = 0x5451;
 // }
@@ -837,13 +839,42 @@ f! {
     pub fn WCOREDUMP(status: ::c_int) -> bool {
         (status & 0x80) != 0
     }
+
+    pub fn FD_CLR(fd: ::c_int, set: *mut fd_set) -> () {
+        let fd = fd as usize;
+        let size = ::mem::size_of_val(&(*set).fds_bits[0]) * 8;
+        (*set).fds_bits[fd / size] &= !(1 << (fd % size));
+        return
+    }
+
+    pub fn FD_ISSET(fd: ::c_int, set: *mut fd_set) -> bool {
+        let fd = fd as usize;
+        let size = ::mem::size_of_val(&(*set).fds_bits[0]) * 8;
+        return ((*set).fds_bits[fd / size] & (1 << (fd % size))) != 0
+    }
+
+    pub fn FD_SET(fd: ::c_int, set: *mut fd_set) -> () {
+        let fd = fd as usize;
+        let size = ::mem::size_of_val(&(*set).fds_bits[0]) * 8;
+        (*set).fds_bits[fd / size] |= 1 << (fd % size);
+        return
+    }
+
+    pub fn FD_ZERO(set: *mut fd_set) -> () {
+        for slot in (*set).fds_bits.iter_mut() {
+            *slot = 0;
+        }
+    }
 }
 
-extern {
+extern "C" {
     // errno.h
     pub fn __errno_location() -> *mut ::c_int;
-    pub fn strerror_r(errnum: ::c_int, buf: *mut c_char,
-                      buflen: ::size_t) -> ::c_int;
+    pub fn strerror_r(
+        errnum: ::c_int,
+        buf: *mut c_char,
+        buflen: ::size_t,
+    ) -> ::c_int;
 
     // unistd.h
     pub fn pipe2(fds: *mut ::c_int, flags: ::c_int) -> ::c_int;
@@ -853,14 +884,14 @@ extern {
 
     // pthread.h
     pub fn pthread_atfork(
-        prepare: ::Option<unsafe extern fn()>,
-        parent: ::Option<unsafe extern fn()>,
-        child: ::Option<unsafe extern fn()>,
+        prepare: ::Option<unsafe extern "C" fn()>,
+        parent: ::Option<unsafe extern "C" fn()>,
+        child: ::Option<unsafe extern "C" fn()>,
     ) -> ::c_int;
     pub fn pthread_create(
         tid: *mut ::pthread_t,
         attr: *const ::pthread_attr_t,
-        start: extern fn(*mut ::c_void) -> *mut ::c_void,
+        start: extern "C" fn(*mut ::c_void) -> *mut ::c_void,
         arg: *mut ::c_void,
     ) -> ::c_int;
     pub fn pthread_condattr_setclock(
@@ -869,11 +900,13 @@ extern {
     ) -> ::c_int;
 
     // pwd.h
-    pub fn getpwuid_r(uid: ::uid_t,
-                      pwd: *mut passwd,
-                      buf: *mut ::c_char,
-                      buflen: ::size_t,
-                      result: *mut *mut passwd) -> ::c_int;
+    pub fn getpwuid_r(
+        uid: ::uid_t,
+        pwd: *mut passwd,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        result: *mut *mut passwd,
+    ) -> ::c_int;
 
     // signal.h
     pub fn pthread_sigmask(
@@ -939,8 +972,7 @@ extern {
     pub fn uname(utsname: *mut utsname) -> ::c_int;
 
     // time.h
-    pub fn gettimeofday(tp: *mut ::timeval,
-                        tz: *mut ::timezone) -> ::c_int;
+    pub fn gettimeofday(tp: *mut ::timeval, tz: *mut ::timezone) -> ::c_int;
     pub fn clock_gettime(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
 }
 
